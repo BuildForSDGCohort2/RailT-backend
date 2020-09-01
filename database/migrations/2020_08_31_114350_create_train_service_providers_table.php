@@ -15,6 +15,9 @@ class CreateTrainServiceProvidersTable extends Migration
     {
         Schema::create('train_service_providers', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->longText('about');
+            $table->longText('address');
             $table->timestamps();
         });
     }
