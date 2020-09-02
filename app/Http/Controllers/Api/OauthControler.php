@@ -25,7 +25,7 @@ class OauthControler extends Controller
         }
 
         try {
-            
+
             return Socialite::driver($driver)->redirect();
 
         } catch (Exception $e) {
@@ -70,7 +70,7 @@ class OauthControler extends Controller
                 'avatar' => $providerUser->avatar,
                 'provider' => $driver,
                 'provider_id' => $providerUser->id,
-                'access_token' => $providerUser->token
+                'provider_token' => $providerUser->token
             ]);
 
         } else {
@@ -83,7 +83,7 @@ class OauthControler extends Controller
                   'avatar' => $providerUser->getAvatar(),
                   'provider' => $driver,
                   'provider_id' => $providerUser->getId(),
-                  'access_token' => $providerUser->token,
+                  'provider_token' => $providerUser->token,
                   'password' => '' // user can use reset password to create a password
             ]);
 
