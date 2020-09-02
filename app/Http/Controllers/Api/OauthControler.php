@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
+use Auth;
+use App\User;
 
 class OauthControler extends Controller
 {
@@ -11,74 +14,136 @@ class OauthControler extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    protected $providers = [
+        'github','facebook','google','twitter'
+    ];
+
+    public function redirectToProvider($driver)
     {
-        //
+        if( ! $this->isProviderAllowed($driver) ) {
+            return $this->sendFailedResponse("{$driver} is not currently supported");
+        }
+
+        try {
+            
+            return Socialite::driver($driver)->redirect();
+
+        } catch (Exception $e) {
+            // You should show something simple fail message
+            return $this->sendFailedResponse($e->getMessage());
+        }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+  
+    public function handleProviderCallback( $driver )
     {
-        //
+        try {
+            $user = Socialite::driver($driver)->user();
+        } catch (Exception $e) {
+            return $this->sendFailedResponse($e->getMessage());
+        }
+
+        // check for email in returned user
+        return empty( $user->email )
+            ? $this->sendFailedResponse("No email id returned from {$driver} provider.")
+            : $this->loginOrCreateAccount($user, $driver);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+
+    protected function sendFailedResponse($msg = null)
     {
-        //
+        return response()->json([
+            'message' => $msg,
+            'status_code' => 401
+        ], 401);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    protected function loginOrCreateAccount($providerUser, $driver)
     {
-        //
+        // check for already has account
+        $user = User::where('email', $providerUser->getEmail())->first();
+
+        // if user already found
+        if( $user ) {
+            // update the avatar and provider that might have changed
+            $user->update([
+                'avatar' => $providerUser->avatar,
+                'provider' => $driver,
+                'provider_id' => $providerUser->id,
+                'access_token' => $providerUser->token
+            ]);
+
+        } else {
+
+
+            if($providerUser->getEmail()){ //Check email exists or not. If exists create a new user
+               $user = User::create([
+                  'name' => $providerUser->getName(),
+                  'email' => $providerUser->getEmail(),
+                  'avatar' => $providerUser->getAvatar(),
+                  'provider' => $driver,
+                  'provider_id' => $providerUser->getId(),
+                  'access_token' => $providerUser->token,
+                  'password' => '' // user can use reset password to create a password
+            ]);
+
+             } else {
+            
+                return response()->json([
+                    'message' => 'Your account doesnt have email address',
+                    'status_code' => 401
+                ], 401);
+            
+            }
+        }
+
+        // login the user
+        if(!Auth::attempt($user)){
+            return response()->json([
+                'message' => 'Invalid username/password',
+                'status_code' => 401
+            ], 401);
+        }
+
+        $user = $request->user();
+
+        if ($user->role == '1'){
+            $tokenData = $user->createToken('Personal Access Token', ['admin']);
+        } elseif ($user->role == '2'){
+            $tokenData = $user->createToken('Personal Access Token', ['tsp']);
+        } elseif ($user->role == '3'){
+            $tokenData = $user->createToken('Personal Access Token', ['passenger']);
+        } else {
+            $tokenData = $user->createToken('Personal Access Token', ['guest']);
+        }
+
+        $token = $tokenData->token;
+
+        if ($request->remember_me){
+            $token->expired_at = Carbon::now()->addWeeks();
+        }
+
+        if ($token->save()){
+            return response()->json([
+                'user' => $user,
+                'access_token' => $tokenData->accessToken,
+                'token_type' => 'Bearer',
+                'token_scope' => $tokenData->token->scope[0],
+                'expired_at' => Carbon::parse($tokenData->token->expired_at)->toDayDateTimeString(),
+                'status_code' => 200
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Some error occurred, try again',
+                'status_code' => 500
+            ], 500);
+        }
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    private function isProviderAllowed($driver)
     {
-        //
+        return in_array($driver, $this->providers) && config()->has("services.{$driver}");
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

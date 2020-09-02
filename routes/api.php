@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'oauth'], function () {
 
-    Route::get('/social', 'Api/OauthController@show')->name('social.login');
     Route::get('/{driver}', 'Api/OauthController@redirectToProvider')->name('social.oauth');
     Route::get('/{driver}/callback', 'Api/OauthController@handleProviderCallback')->name('social.callback');
     
