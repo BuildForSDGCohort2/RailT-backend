@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+//Route::middleware('auth:api')->get('/user', function (Request $request) {
+ //   return $request->user();
+//});
+
+Route::group(['prefix' => 'oauth'], function () {
+
+    Route::get('/social', 'Api/OauthController@show')->name('social.login');
+    Route::get('/{driver}', 'Api/OauthController@redirectToProvider')->name('social.oauth');
+    Route::get('/{driver}/callback', 'Api/OauthController@handleProviderCallback')->name('social.callback');
+    
 });
