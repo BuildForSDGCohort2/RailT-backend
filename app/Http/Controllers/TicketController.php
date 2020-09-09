@@ -28,7 +28,7 @@ class TicketController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'ticket' => 'required',
+            'ticket' => 'required|unique:tickets',
             'schedule' => 'required',
         ]);
         if ($data) {
