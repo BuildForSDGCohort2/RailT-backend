@@ -19,10 +19,13 @@ use Illuminate\Support\Facades\Route;
 //});
 
 Route::group(['prefix' => 'oauth'], function () {
-    Route::get('/{driver}', 'Api/OauthController@redirectToProvider')->name('social.oauth');
-    Route::get('/{driver}/callback', 'Api/OauthController@handleProviderCallback')->name('social.callback');
+    Route::get('/{driver}', 'Api\OauthController@redirectToProvider')->name('social.oauth');
+    Route::get('/{driver}/callback', 'Api\OauthController@handleProviderCallback')->name('social.callback');
 });
 
+Route::post('register', 'UserController@register');
+Route::post('login', 'UserController@login');
+Route::post('logout', 'UserController@logout');
 Route::apiResource('station', 'StationController');
 Route::apiResource('trainServiceProvider', 'TrainServiceProviderController'); 
 Route::apiResource('carrier', 'CarrierController'); 

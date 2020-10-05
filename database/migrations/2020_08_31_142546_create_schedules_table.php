@@ -16,7 +16,7 @@ class CreateSchedulesTable extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->timestamp('departure_time');
-            $table->timestamp('arriva_time');
+            $table->timestamp('arriva_time')->nullable();
             $table->unsignedBigInteger('from');
             $table->unsignedBigInteger('to');
             $table->unsignedBigInteger('carrier');
