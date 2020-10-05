@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\User;
+use App\Role;
 use Carbon\Carbon;
 use Auth;
 
@@ -116,8 +117,7 @@ class UserController extends Controller
     public function login(Request $request){
         $request->validate([
             'password' => 'required|string',
-            'email' => 'required|string|email',
-            'remember_me' => 'boolean'
+            'email' => 'required|string|email'
         ]);
 
         if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])){
@@ -129,21 +129,23 @@ class UserController extends Controller
 
         $user = $request->user();
 
-        if ($user->role == 'administrator'){
-            $tokenData = $user->createToken('Personal Access Token', ['administrator']);
+        if ($user->role == 1){
+            $tokenData = $user->createToken('Personal Access Token', ['admin']);
+        } elseif($user->role == 2) {
+            $tokenData = $user->createToken('Personal Access Token', ['tsp']);
         } else {
-            $tokenData = $user->createToken('Personal Access Token', ['user']);
+            $tokenData = $user->createToken('Personal Access Token', ['passenger']);
         }
 
         $token = $tokenData->token;
+        $token->expires_at = Carbon::now()->addWeeks();
 
-        if ($request->remember_me){
-            $token->expired_at = Carbon::now()->addWeeks();
-        }
-
+        $role = Role::find($user->role)->name;
+        
         if ($token->save()){
             return response()->json([
                 'user' => $user,
+                'role' => $role,
                 'access_token' => $tokenData->accessToken,
                 'token_type' => 'Bearer',
                 'token_scope' => $tokenData->token->scope[0],

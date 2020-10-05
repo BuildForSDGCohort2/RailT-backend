@@ -25,12 +25,16 @@ Route::group(['prefix' => 'oauth'], function () {
 
 Route::post('register', 'UserController@register');
 Route::post('login', 'UserController@login');
-Route::post('logout', 'UserController@logout');
-Route::apiResource('station', 'StationController');
-Route::apiResource('trainServiceProvider', 'TrainServiceProviderController'); 
-Route::apiResource('carrier', 'CarrierController'); 
-Route::apiResource('ticket', 'TicketController'); 
-Route::apiResource('schedule', 'ScheduleController'); 
+
+Route::group(['middleware' => 'auth:api'], function(){
+    Route::get('profile', 'UserController@profile');
+    Route::get('logout', 'UserController@logout');
+    Route::apiResource('station', 'StationController');
+    Route::apiResource('trainServiceProvider', 'TrainServiceProviderController'); 
+    Route::apiResource('carrier', 'CarrierController'); 
+    Route::apiResource('ticket', 'TicketController'); 
+    Route::apiResource('schedule', 'ScheduleController');
+}); 
 
 
 
