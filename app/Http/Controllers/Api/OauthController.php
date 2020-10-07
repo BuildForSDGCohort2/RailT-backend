@@ -7,7 +7,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Auth;
 use App\User;
 
-class OauthControler extends Controller
+class OauthController extends Controller
 {
     /**
      * Display a listing of the resource.

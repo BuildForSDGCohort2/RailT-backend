@@ -19,15 +19,22 @@ use Illuminate\Support\Facades\Route;
 //});
 
 Route::group(['prefix' => 'oauth'], function () {
-    Route::get('/{driver}', 'Api/OauthController@redirectToProvider')->name('social.oauth');
-    Route::get('/{driver}/callback', 'Api/OauthController@handleProviderCallback')->name('social.callback');
+    Route::get('/{driver}', 'Api\OauthController@redirectToProvider')->name('social.oauth');
+    Route::get('/{driver}/callback', 'Api\OauthController@handleProviderCallback')->name('social.callback');
 });
 
-Route::apiResource('station', 'StationController');
-Route::apiResource('trainServiceProvider', 'TrainServiceProviderController'); 
-Route::apiResource('carrier', 'CarrierController'); 
-Route::apiResource('ticket', 'TicketController'); 
-Route::apiResource('schedule', 'ScheduleController'); 
+Route::post('register', 'UserController@register');
+Route::post('login', 'UserController@login');
+
+Route::group(['middleware' => 'auth:api'], function(){
+    Route::get('profile', 'UserController@profile');
+    Route::get('logout', 'UserController@logout');
+    Route::apiResource('station', 'StationController');
+    Route::apiResource('trainServiceProvider', 'TrainServiceProviderController'); 
+    Route::apiResource('carrier', 'CarrierController'); 
+    Route::apiResource('ticket', 'TicketController'); 
+    Route::apiResource('schedule', 'ScheduleController');
+}); 
 
 
 
